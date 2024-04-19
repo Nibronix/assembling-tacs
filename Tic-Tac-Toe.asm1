@@ -1,0 +1,90 @@
+.data
+
+# Data for drawing the board
+board: .byte 0, 0, 0   # Each byte represents a cell, 0 for empty, 1 for X, 2 for O
+       .byte 0, 1, 0
+       .byte 0, 0, 0
+newline: .asciiz "\n"
+divider: .asciiz "----------------------\n"
+verticalBar: .asciiz " | "
+
+.text
+.globl main
+
+# Cell counter
+main:
+    la $t0, board
+    li $t1, 0           
+
+# Row counter
+print_board:
+    li $t3, 0           
+
+print_row:
+    # Print first vertical bar for new row
+    li $v0, 4
+    la $a0, verticalBar
+    syscall
+
+    # Print cell
+    lb $t4, 0($t0)
+    beq $t4, 0, print_empty
+    beq $t4, 1, print_x
+    beq $t4, 2, print_o
+
+# ASCII for space ' '
+print_empty:
+    li $a0, 32          
+    j print_char
+
+# ASCII for 'X'
+print_x:
+    li $a0, 88          
+    j print_char
+
+# ASCII for 'O'
+print_o:
+    li $a0, 79          
+    j print_char
+
+print_char:
+    li $v0, 11
+    syscall
+
+    # Print vertical bar after the character
+    li $v0, 4
+    la $a0, verticalBar
+    syscall
+
+    # Move to next cell
+    addi $t0, $t0, 1
+    addi $t1, $t1, 1
+    addi $t3, $t3, 1
+
+    # Check if end of a row
+    li $t5, 3
+    rem $t6, $t3, $t5
+    beqz $t6, check_row_end
+    j print_row
+
+check_row_end:
+    # Print new line after each row
+    li $v0, 4
+    la $a0, newline
+    syscall
+
+    # Print divider if not the last row
+    li $t7, 9
+    bne $t1, $t7, print_divider
+    j finish_board
+
+print_divider:
+    li $v0, 4
+    la $a0, divider
+    syscall
+    j print_board
+
+finish_board:
+    # Exit
+    li $v0, 10
+    syscall
